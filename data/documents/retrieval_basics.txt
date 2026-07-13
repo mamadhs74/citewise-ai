@@ -1,0 +1,5 @@
+Retrieval-augmented systems first search a trusted collection for relevant evidence. The retrieved passages can then be shown directly to a user or supplied to a language model as context. Keeping source identifiers next to every passage makes the system easier to inspect and audit.
+
+A retrieval system should not be judged only by whether its interface looks convincing. It should be evaluated with representative questions, expected relevant passages, ranking metrics, and failure analysis. Useful measures include precision, recall, mean reciprocal rank, and human judgments of evidence quality.
+
+Chunking divides long documents into passages that can be indexed independently. Chunks that are too small may lose context, while chunks that are too large may contain unrelated material. Overlap can preserve information that crosses a chunk boundary, but excessive overlap creates duplicate results.

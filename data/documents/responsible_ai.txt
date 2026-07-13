@@ -1,0 +1,3 @@
+Responsible AI systems should communicate uncertainty and avoid presenting unsupported claims as facts. In evidence-based question answering, a system should return the passages that support a response and clearly state when the collection does not contain enough information.
+
+Evaluation data should reflect the intended users and use cases. Developers should inspect errors across different query types rather than relying on one aggregate score. Privacy, security, accessibility, and potential misuse should be considered before deployment.
