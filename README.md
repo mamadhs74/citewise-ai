@@ -13,6 +13,7 @@ Modern AI assistants need retrieval, grounding, evaluation, and transparent evid
 - TF-IDF unigram and bigram retrieval
 - Cosine-similarity ranking
 - Source and chunk citations
+- Document-level source filtering
 - Streamlit interface
 - Unit tests for chunking and retrieval
 
