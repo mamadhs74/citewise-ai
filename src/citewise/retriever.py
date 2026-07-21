@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -29,6 +29,11 @@ class EvidenceRetriever:
     def is_ready(self) -> bool:
         return self._vectorizer is not None and bool(self._chunks)
 
+    @property
+    def available_sources(self) -> tuple[str, ...]:
+        """Return indexed source names in alphabetical order."""
+        return tuple(sorted({source for source, _, _ in self._chunks}))
+
     def fit(self, documents: Mapping[str, str]) -> int:
         chunks: list[tuple[str, int, str]] = []
 
@@ -47,38 +52,62 @@ class EvidenceRetriever:
             raise ValueError("No non-empty document chunks were provided")
 
         corpus = [text for _, _, text in chunks]
+
         vectorizer = TfidfVectorizer(
             lowercase=True,
             stop_words="english",
             ngram_range=(1, 2),
             sublinear_tf=True,
         )
+
         matrix = vectorizer.fit_transform(corpus)
 
         self._chunks = chunks
         self._vectorizer = vectorizer
         self._matrix = matrix
+
         return len(chunks)
 
-    def search(self, query: str, *, top_k: int = 5) -> list[SearchResult]:
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 5,
+        sources: Collection[str] | None = None,
+    ) -> list[SearchResult]:
         if not self.is_ready:
             raise RuntimeError("Retriever must be fitted before search")
+
         if not query.strip():
             return []
+
         if top_k <= 0:
             raise ValueError("top_k must be greater than zero")
 
+        source_filter = set(sources) if sources is not None else None
+
+        if source_filter is not None and not source_filter:
+            return []
+
         assert self._vectorizer is not None
+
         query_vector = self._vectorizer.transform([query])
         scores = cosine_similarity(query_vector, self._matrix).ravel()
         ranked_indices = np.argsort(scores)[::-1]
 
         results: list[SearchResult] = []
+
         for index in ranked_indices:
+            source, chunk_id, text = self._chunks[int(index)]
+
+            if source_filter is not None and source not in source_filter:
+                continue
+
             score = float(scores[index])
+
             if score < self.min_score:
                 continue
-            source, chunk_id, text = self._chunks[int(index)]
+
             results.append(
                 SearchResult(
                     source=source,
@@ -87,6 +116,8 @@ class EvidenceRetriever:
                     score=score,
                 )
             )
+
             if len(results) == top_k:
                 break
+
         return results
